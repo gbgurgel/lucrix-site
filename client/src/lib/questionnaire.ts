@@ -243,6 +243,18 @@ export function getQuestionCount(kind: OfferKind | ""): number {
   return getQuestions(kind).length;
 }
 
+export function changeOfferKind(answers: Answers, nextKind: OfferKind): Answers {
+  if (answers.kind === nextKind) return answers;
+  return {
+    ...answers,
+    kind: nextKind,
+    unitCost: "",
+    packagingCost: "",
+    freightCost: "",
+    returnRate: "",
+  };
+}
+
 export function isQuestionValid(question: QuestionDefinition, answers: Answers): boolean {
   const value = answers[question.id];
   if (question.kind === "choice") return value === "physical" || value === "digital" || value === "service";

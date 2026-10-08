@@ -39,18 +39,20 @@ export interface Scenario {
 }
 
 export function inputsFromAnswers(answers: Answers): SimulationInputs {
+  const isPhysical = answers.kind === "physical";
+  const hasReturns = answers.kind === "physical" || answers.kind === "digital";
   return {
     price: numberAnswer(answers, "price"),
     monthlyVolume: numberAnswer(answers, "monthlyVolume"),
     unitCost: numberAnswer(answers, "unitCost"),
-    packagingCost: numberAnswer(answers, "packagingCost"),
-    freightCost: numberAnswer(answers, "freightCost"),
+    packagingCost: isPhysical ? numberAnswer(answers, "packagingCost") : 0,
+    freightCost: isPhysical ? numberAnswer(answers, "freightCost") : 0,
     commissionRate: numberAnswer(answers, "commissionRate"),
     paymentRate: numberAnswer(answers, "paymentRate"),
     paymentFixed: numberAnswer(answers, "paymentFixed"),
     taxRate: numberAnswer(answers, "taxRate"),
     cac: numberAnswer(answers, "cac"),
-    returnRate: numberAnswer(answers, "returnRate"),
+    returnRate: hasReturns ? numberAnswer(answers, "returnRate") : 0,
     fixedCosts: numberAnswer(answers, "fixedCosts"),
     initialInvestment: numberAnswer(answers, "initialInvestment"),
   };

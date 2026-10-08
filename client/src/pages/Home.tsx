@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -24,6 +24,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Starfield from "@/components/Starfield";
 import {
   Answers,
+  changeOfferKind,
   INITIAL_ANSWERS,
   isQuestionValid,
   OFFER_OPTIONS,
@@ -472,6 +473,10 @@ function ResultScreen({
   onRestart: () => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const resultTitleRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    resultTitleRef.current?.focus({ preventScroll: true });
+  }, []);
   const original = useMemo(() => inputsFromAnswers(answers), [answers]);
   const [simulation, setSimulation] = useState<SimulationInputs | null>(null);
   useEffect(() => setSimulation(original), [original]);
@@ -485,9 +490,37 @@ function ResultScreen({
     { key: "price" as const, label: "Preço por venda", value: activeInputs.price, max: Math.max(original.price * 1.5, 50), step: 1, format: brl.format },
     { key: "monthlyVolume" as const, label: "Vendas por mês", value: activeInputs.monthlyVolume, max: Math.max(original.monthlyVolume * 2, 100), step: 1, format: (value: number) => `${integer.format(value)} vendas` },
     { key: "cac" as const, label: "CAC por venda", value: activeInputs.cac, max: Math.max(original.cac * 2, original.price * 0.5, 50), step: 1, format: brl.format },
-    { key: "unitCost" as const, label: "Custo variável por venda", value: activeInputs.unitCost, max: Math.max(original.unitCost * 2, original.price * 0.85, 50), step: 1, format: brl.format },
+    { key: "unitCost" as const, label: answers.kind === "physical" ? "Custo do produto / unidade" : answers.kind === "service" ? "Custo de entrega / serviço" : "Custo direto por venda", value: activeInputs.unitCost, max: Math.max(original.unitCost * 2, original.price * 0.85, 50), step: 1, format: brl.format },
     { key: "fixedCosts" as const, label: "Custos fixos mensais", value: activeInputs.fixedCosts, max: Math.max(original.fixedCosts * 2, original.price * Math.max(original.monthlyVolume, 1), 1000), step: 10, format: compactBrl.format },
   ];
+  const premiseItems = [
+    { label: "Preço", value: brl.format(original.price) },
+    { label: "Vendas / mês", value: integer.format(original.monthlyVolume) },
+    {
+      label: answers.kind === "physical" ? "Custo do produto" : answers.kind === "service" ? "Custo por serviço" : "Custo direto",
+      value: brl.format(original.unitCost),
+    },
+  ];
+  if (answers.kind === "physical") {
+    premiseItems.push(
+      { label: "Embalagem", value: brl.format(original.packagingCost) },
+      { label: "Frete", value: brl.format(original.freightCost) },
+    );
+  }
+  premiseItems.push(
+    { label: "Comissão", value: `${percent.format(original.commissionRate)}%` },
+    { label: "Taxa de pagamento", value: `${percent.format(original.paymentRate)}%` },
+    { label: "Tarifa fixa", value: brl.format(original.paymentFixed) },
+    { label: "Impostos", value: `${percent.format(original.taxRate)}%` },
+    { label: "CAC", value: brl.format(original.cac) },
+  );
+  if (answers.kind === "physical" || answers.kind === "digital") {
+    premiseItems.push({ label: answers.kind === "physical" ? "Devoluções" : "Reembolsos", value: `${percent.format(original.returnRate)}%` });
+  }
+  premiseItems.push(
+    { label: "Custos fixos / mês", value: brl.format(original.fixedCosts) },
+    { label: "Investimento inicial", value: brl.format(original.initialInvestment) },
+  );
 
   return (
     <main className="results-page">
@@ -495,7 +528,7 @@ function ResultScreen({
         <header className="results-header"><Wordmark small /><div className="results-header-right"><span className="analysis-badge"><span /> análise pronta</span><button className="exit-link" onClick={onRestart}>Nova análise <RotateCcw size={14} /></button></div></header>
 
         <section className="results-title-row">
-          <div><span className="section-kicker">SUA LEITURA INICIAL · {offerTypeLabel.toUpperCase()}</span><h1>Os números da sua oferta<span className="heading-dot">.</span></h1><p>{answers.name ? <><b>{answers.name}</b> · </> : null}estimativa baseada nas premissas que você informou.</p></div>
+          <div><span className="section-kicker">SUA LEITURA INICIAL · {offerTypeLabel.toUpperCase()}</span><h1 ref={resultTitleRef} tabIndex={-1}>Os números da sua oferta<span className="heading-dot">.</span></h1><p>{answers.name ? <><b>{answers.name}</b> · </> : null}estimativa baseada nas premissas que você informou.</p></div>
           <BrandButton variant="outline" onClick={onEdit}><ArrowLeft size={15} /> Editar respostas</BrandButton>
         </section>
 
@@ -540,7 +573,7 @@ function ResultScreen({
           <article className="panel formula-panel">
             <div className="panel-heading"><div><span className="section-kicker">CONTA ABERTA</span><h2>Como chegamos aqui</h2></div><span className="formula-symbol">ƒx</span></div>
             <div className="formula-steps">
-              <div><span>01</span><p><b>Margem de contribuição</b><small>Preço − custos variáveis por venda, taxas, CAC e devoluções estimadas.</small></p></div>
+              <div><span>01</span><p><b>Margem de contribuição</b><small>{answers.kind === "physical" ? "Preço − custo do produto, embalagem, frete, taxas, CAC e devoluções estimadas." : answers.kind === "digital" ? "Preço − custos diretos, taxas, CAC e reembolsos estimados." : "Preço − custo de entrega, taxas, CAC e outros custos variáveis aplicáveis."}</small></p></div>
               <div><span>02</span><p><b>Ponto de equilíbrio</b><small>Custos fixos ÷ margem por venda; arredondado para cima.</small></p></div>
               <div><span>03</span><p><b>Resultado mensal</b><small>Margem por venda × vendas esperadas − custos fixos mensais.</small></p></div>
             </div>
@@ -548,7 +581,7 @@ function ResultScreen({
           <article className="panel assumptions-panel">
             <div className="panel-heading"><div><span className="section-kicker">O QUE FOI INFORMADO</span><h2>Premissas da análise</h2></div><span className="assumptions-icon"><Check size={15} /></span></div>
             <div className="assumption-chips">
-              <span><i /> Preço {brl.format(original.price)}</span><span><i /> {integer.format(original.monthlyVolume)} vendas / mês</span><span><i /> CAC {brl.format(original.cac)}</span><span><i /> Custos fixos {brl.format(original.fixedCosts)} / mês</span>
+              {premiseItems.map(({ label, value }) => <span key={label}><i /> {label} · {value}</span>)}
             </div>
             <p className="assumption-note">Os campos em branco foram tratados como zero. Ajustes no simulador não alteram suas respostas originais.</p>
           </article>
@@ -568,6 +601,10 @@ export default function Home() {
   const questions = getQuestions(answers.kind);
 
   const updateAnswer = (key: keyof Answers, value: string | number) => {
+    if (key === "kind" && typeof value === "string") {
+      setAnswers((current) => changeOfferKind(current, value as OfferKind));
+      return;
+    }
     setAnswers((current) => ({ ...current, [key]: value }));
   };
   const begin = () => {

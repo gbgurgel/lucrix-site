@@ -24,7 +24,7 @@ O projeto usa o starter React/TypeScript/Vite já instalado, Tailwind e a depend
 
 ## Direção visual aprovada
 
-- **Movimento estético:** interface de exploração espacial digital, guiada pela captura de referência do usuário: questionário escuro em violeta profundo, filete de progresso luminoso, poeira estelar discreta, título branco amplo, subtítulo de baixo contraste, campo de formulário largo e botões de navegação.
+- **Movimento estético:** interface de exploração espacial digital, guiada pela captura de referência do usuário: questionário escuro em violeta profundo, filete de progresso luminoso, poeira estelar discreta, título branco amplo, subtítulo secundário com contraste acessível, campo de formulário largo e botões de navegação.
 - **Princípios centrais:** clareza antes do ornamento; profundidade cósmica com contenção; movimento que comunica progresso; números e hipóteses sempre legíveis.
 - **Filosofia de cor:** fundo quase preto com nuance índigo/violeta para reduzir fadiga; violeta luminoso como assinatura de foco e avanço; texto em marfim frio e lavanda secundária para hierarquia; verde/âmbar/vermelho reservados a sinais financeiros neutros, sem sugerir certeza.
 - **Paradigma de layout:** apresentação editorial arejada com blocos alternados e assimétricos; no diagnóstico, painel de largura controlada em posição central com progresso alinhado no topo, ecoando exatamente a hierarquia da referência; resultado em trilha de leitura, com simulador ao lado em telas largas e empilhado em telas estreitas.
@@ -41,9 +41,9 @@ O projeto usa o starter React/TypeScript/Vite já instalado, Tailwind e a depend
 
 - `client/src/pages/Home.tsx`: reúne a landing, o questionário, os resultados, o simulador e os controles de reinício/edição, com subcomponentes de UI locais à página.
 - `client/src/components/Starfield.tsx`: campo estrelado em canvas, com `requestAnimationFrame`, limite de pontos, pausa quando a aba fica oculta e suporte a movimento reduzido.
-- `client/src/lib/questionnaire.ts`: modelo tipado de perguntas/visibilidade por categoria, validação e limites de etapas.
-- `client/src/lib/profitability.ts`: funções puras de custos, margem, ponto de equilíbrio, resultado, cenários e mapeamento das respostas; sem dependência de interface.
-- `client/src/lib/profitability.test.ts`: testes unitários da matemática, limites do questionário e premissas dos cenários.
+- `client/src/lib/questionnaire.ts`: modelo tipado de perguntas/visibilidade por categoria, validação e limites de etapas; troca de categoria limpa respostas cujo significado ou aplicabilidade muda, preservando as premissas comuns.
+- `client/src/lib/profitability.ts`: funções puras de custos, margem, ponto de equilíbrio, resultado, cenários e normalização por categoria que exclui custos ocultos não aplicáveis; sem dependência de interface.
+- `client/src/lib/profitability.test.ts`: testes unitários da matemática, limites e ramificações do questionário, limpeza ao trocar a categoria e normalização de respostas antigas.
 - `client/src/index.css`: tokens, layouts, estados de foco e movimento, breakpoints e alternativa `prefers-reduced-motion`.
 - `client/src/App.tsx`: tema escuro, redução de movimento para Framer Motion e rotas do site.
 - `client/index.html`: idioma `pt-BR`, metadados e favicon.
@@ -56,4 +56,4 @@ O projeto usa o starter React/TypeScript/Vite já instalado, Tailwind e a depend
 
 ## Restrições e dependências
 
-Sem autenticação, serviços externos, persistência, novas bibliotecas ou imagens decorativas. A imagem fornecida é guia visual e não será reproduzida como screenshot de fundo. Manter a linguagem pt-BR e a declaração de rotas atualizada. Acessibilidade inclui navegação por teclado, foco visível, rótulos associados, contraste, anúncios adequados de progresso/resultado e respeito a movimento reduzido.
+Sem autenticação, serviços externos, persistência, novas bibliotecas ou imagens decorativas. A imagem fornecida é guia visual e não será reproduzida como screenshot de fundo. Manter a linguagem pt-BR e a declaração de rotas atualizada. Os resultados exibem as premissas numéricas aplicáveis à categoria; a acessibilidade inclui navegação por teclado, foco visível, rótulos associados, contraste de ao menos 4,5:1 em textos normais sobre os fundos escuros declarados, barra de progresso semântica, anúncio/foco do título do resultado e respeito a movimento reduzido.

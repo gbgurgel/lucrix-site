@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculateProfitability, calculateScenarios } from "./profitability";
-import { getQuestionCount, getQuestions } from "./questionnaire";
+import { calculateProfitability, calculateScenarios, inputsFromAnswers } from "./profitability";
+import { changeOfferKind, getQuestionCount, getQuestions, INITIAL_ANSWERS } from "./questionnaire";
 
 describe("Lucrix estimate model", () => {
   it("keeps each tailored questionnaire within the requested maximum of 15 questions", () => {
@@ -90,5 +90,51 @@ describe("Lucrix estimate model", () => {
     expect(scenarios[0].result.monthlyVolume).toBe(75);
     expect(scenarios[1].result.monthlyVolume).toBe(100);
     expect(scenarios[2].result.monthlyVolume).toBe(120);
+  });
+
+  it("clears type-specific answers when the offer category changes", () => {
+    const physicalAnswers = {
+      ...INITIAL_ANSWERS,
+      kind: "physical" as const,
+      name: "Garrafa",
+      price: 100,
+      monthlyVolume: 80,
+      unitCost: 25,
+      packagingCost: 4,
+      freightCost: 12,
+      returnRate: 8,
+    };
+
+    const digitalAnswers = changeOfferKind(physicalAnswers, "digital");
+    expect(digitalAnswers.name).toBe("Garrafa");
+    expect(digitalAnswers.price).toBe(100);
+    expect(digitalAnswers.monthlyVolume).toBe(80);
+    expect(digitalAnswers.unitCost).toBe("");
+    expect(digitalAnswers.packagingCost).toBe("");
+    expect(digitalAnswers.freightCost).toBe("");
+    expect(digitalAnswers.returnRate).toBe("");
+  });
+
+  it("normalizes hidden costs by offer type even if stale answers reach the calculation", () => {
+    const stalePhysicalAnswers = {
+      ...INITIAL_ANSWERS,
+      kind: "physical" as const,
+      price: 100,
+      monthlyVolume: 50,
+      packagingCost: 5,
+      freightCost: 12,
+      returnRate: 8,
+    };
+
+    const digital = calculateProfitability({
+      ...inputsFromAnswers({ ...stalePhysicalAnswers, kind: "digital" }),
+      unitCost: 20,
+    });
+    const service = inputsFromAnswers({ ...stalePhysicalAnswers, kind: "service" });
+
+    expect(digital.variableCostPerSale).toBe(28);
+    expect(service.packagingCost).toBe(0);
+    expect(service.freightCost).toBe(0);
+    expect(service.returnRate).toBe(0);
   });
 });
